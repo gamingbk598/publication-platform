@@ -1,0 +1,39 @@
+---
+import PublicLayout from '../../layouts/public/PublicLayout.astro';
+import { authors } from '../../lib/sample-data';
+---
+
+<PublicLayout title="Authors — Did You Hear?" description="The people behind the channel.">
+  <section class="mx-auto max-w-6xl px-4 py-12">
+    <header class="mb-8 border-b border-ink-200 pb-4">
+      <h1 class="font-display text-3xl font-bold text-ink-950 md:text-4xl">Authors</h1>
+      <p class="mt-2 text-ink-600">The writers and editors of Did You Hear?.</p>
+    </header>
+    <div class="grid gap-6 sm:grid-cols-2">
+      {authors.map((author) => (
+        <a
+          href={`/authors/${author.slug}`}
+          class="group rounded-card border border-ink-200 bg-white p-6 transition-shadow hover:shadow-card dark:bg-ink-900"
+        >
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-ink-200 font-display text-xl font-bold text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+              {author.name.split(' ').map((part) => part[0]).join('')}
+            </div>
+            <div>
+              <h2 class="font-display text-xl font-bold text-ink-950 group-hover:text-accent-700 dark:text-ink-50">
+                {author.name}
+              </h2>
+              <p class="text-sm text-accent-700">{author.title}</p>
+            </div>
+          </div>
+          <p class="mt-4 line-clamp-3 text-sm leading-relaxed text-ink-500">{author.bio}</p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            {author.expertise.map((area) => (
+              <span class="rounded-full border border-ink-200 px-2.5 py-0.5 text-xs text-ink-500">{area}</span>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</PublicLayout>

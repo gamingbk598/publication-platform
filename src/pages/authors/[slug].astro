@@ -1,0 +1,52 @@
+---
+import PublicLayout from '../../layouts/public/PublicLayout.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import { getAuthorBySlug, getByAuthor, formatDate } from '../../lib/sample-data';
+
+const { slug } = Astro.params;
+const author = slug ? getAuthorBySlug(slug) : undefined;
+
+if (!author) {
+  return Astro.rewrite('/404');
+}
+
+const articles = getByAuthor(author.id);
+---
+
+<PublicLayout title={`${author.name} — Did You Hear?`} description={author.bio}>
+  <section class="mx-auto max-w-6xl px-4 py-12">
+    <header class="border-b border-ink-200 pb-8">
+      <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-ink-200 font-display text-2xl font-bold text-ink-600 dark:bg-ink-800 dark:text-ink-300">
+          {author.name.split(' ').map((part) => part[0]).join('')}
+        </div>
+        <div>
+          <h1 class="font-display text-3xl font-bold text-ink-950 dark:text-ink-50">{author.name}</h1>
+          <p class="mt-1 text-accent-700">{author.title} · Joined {formatDate(author.joinedAt)}</p>
+          <p class="mt-3 max-w-2xl leading-relaxed text-ink-600">{author.bio}</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            {author.expertise.map((area) => (
+              <span class="rounded-full border border-ink-200 px-2.5 py-0.5 text-xs text-ink-500">{area}</span>
+            ))}
+          </div>
+          <div class="mt-3 flex gap-3 text-sm text-ink-500">
+            {author.socials.map((social) => (
+              <a href={social.url} class="hover:text-ink-900">{social.label}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <h2 class="mt-10 font-display text-xl font-bold text-ink-950 dark:text-ink-50">
+      Published articles ({articles.length})
+    </h2>
+    {articles.length === 0 ? (
+      <p class="py-12 text-center text-ink-500">No published articles yet.</p>
+    ) : (
+      <div class="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {articles.map((article) => <ArticleCard article={article} />)}
+      </div>
+    )}
+  </section>
+</PublicLayout>
