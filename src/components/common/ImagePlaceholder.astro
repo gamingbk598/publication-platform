@@ -1,0 +1,21 @@
+---
+import type { Article } from '../../types/article';
+import { getCategory } from '../../lib/sample-data';
+
+interface Props {
+  article: Article;
+  label?: string;
+}
+
+const { article, label } = Astro.props;
+const category = getCategory(article.categorySlug);
+---
+
+<div
+  class={`flex items-center justify-center bg-gradient-to-br ${category?.placeholderGradient ?? 'from-ink-200 to-ink-300'} dark:opacity-80`}
+  aria-hidden="true"
+>
+  <span class="font-display text-3xl font-bold text-ink-950/40">
+    {label ?? article.contentType.toUpperCase()}
+  </span>
+</div>

@@ -1,0 +1,27 @@
+---
+import ArticleCard from '../cards/ArticleCard.astro';
+import type { Article } from '../../types/article';
+
+interface Props {
+  title: string;
+  description?: string;
+  articles: Article[];
+}
+
+const { title, description, articles } = Astro.props;
+---
+
+<section class="mx-auto max-w-6xl px-4 py-12">
+  <header class="mb-8 border-b border-ink-200 pb-4">
+    <h1 class="font-display text-3xl font-bold text-ink-950 md:text-4xl">{title}</h1>
+    {description && <p class="mt-2 max-w-2xl text-ink-600">{description}</p>}
+  </header>
+
+  {articles.length === 0 ? (
+    <p class="py-16 text-center text-ink-500">No articles here yet — check back soon.</p>
+  ) : (
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {articles.map((article) => <ArticleCard article={article} />)}
+    </div>
+  )}
+</section>
