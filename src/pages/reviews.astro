@@ -1,0 +1,13 @@
+---
+import PublicLayout from '../layouts/public/PublicLayout.astro';
+import ListingPage from '../components/articles/ListingPage.astro';
+import { getByType } from '../lib/sample-data';
+---
+
+<PublicLayout title="Reviews — Did You Hear?">
+  <ListingPage
+    title="Reviews"
+    description="Honest assessments after real, extended use — not spec sheets."
+    articles={getByType('review')}
+  />
+</PublicLayout>

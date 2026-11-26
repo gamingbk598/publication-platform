@@ -1,0 +1,9 @@
+---
+import PublicLayout from '../layouts/public/PublicLayout.astro';
+import ListingPage from '../components/articles/ListingPage.astro';
+import { getByType } from '../lib/sample-data';
+---
+
+<PublicLayout title="Blogs — Did You Hear?">
+  <ListingPage title="Blogs" description="Personal essays and notes from our writers." articles={getByType('blog')} />
+</PublicLayout>

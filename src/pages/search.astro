@@ -1,0 +1,45 @@
+---
+import PublicLayout from '../layouts/public/PublicLayout.astro';
+import ArticleCard from '../components/cards/ArticleCard.astro';
+import { searchArticles } from '../lib/sample-data';
+
+const q = typeof Astro.url.searchParams.get('q') === 'string' ? Astro.url.searchParams.get('q') ?? '' : '';
+const results = q ? searchArticles(q) : [];
+---
+
+<PublicLayout title={q ? `Search: ${q} — Did You Hear?` : 'Search — Did You Hear?'}>
+  <section class="mx-auto max-w-6xl px-4 py-12">
+    <header class="mb-8 border-b border-ink-200 pb-4">
+      <h1 class="font-display text-3xl font-bold text-ink-950 md:text-4xl">Search</h1>
+      <form action="/search" method="get" role="search" class="mt-4">
+        <input
+          type="search"
+          name="q"
+          value={q}
+          placeholder="Search articles, authors, topics…"
+          aria-label="Search articles"
+          class="w-full max-w-xl rounded-card border border-ink-200 bg-white px-4 py-2.5 text-ink-900 placeholder:text-ink-400 focus:border-ink-400 focus:outline-none dark:bg-ink-900 dark:text-ink-100"
+        />
+      </form>
+    </header>
+
+    {q && results.length === 0 && (
+      <p class="py-12 text-center text-ink-500">
+        No results for “<span class="font-medium text-ink-800 dark:text-ink-200">{q}</span>”. Try different words.
+      </p>
+    )}
+
+    {!q && <p class="py-12 text-center text-ink-500">Type a query above to search all published articles.</p>}
+
+    {results.length > 0 && (
+      <>
+        <p class="mb-6 text-sm text-ink-500">
+          {results.length} {results.length === 1 ? 'result' : 'results'} for “<span class="font-medium text-ink-800 dark:text-ink-200">{q}</span>”
+        </p>
+        <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {results.map((article) => <ArticleCard article={article} />)}
+        </div>
+      </>
+    )}
+  </section>
+</PublicLayout>

@@ -1,0 +1,98 @@
+---
+import PublicLayout from '../../layouts/public/PublicLayout.astro';
+import ArticleBody from '../../components/articles/ArticleBody.astro';
+import ArticleCard from '../../components/cards/ArticleCard.astro';
+import ImagePlaceholder from '../../components/common/ImagePlaceholder.astro';
+import {
+  getArticleBySlug,
+  getCategory,
+  getAuthorById,
+  getRelated,
+  formatDate,
+} from '../../lib/sample-data';
+
+const { slug } = Astro.params;
+const article = slug ? getArticleBySlug(slug) : undefined;
+
+if (!article) {
+  return Astro.rewrite('/404');
+}
+
+const category = getCategory(article.categorySlug);
+const author = getAuthorById(article.authorId);
+const related = getRelated(article, 3);
+---
+
+<PublicLayout title={`${article.title} — Did You Hear?`} description={article.excerpt}>
+  <div class="mx-auto max-w-3xl px-4 py-10">
+    <nav aria-label="Breadcrumb" class="text-sm text-ink-400">
+      <a href="/" class="hover:text-ink-700">Home</a> ›
+      <a href={`/topics/${category?.slug}`} class="hover:text-ink-700">{category?.name}</a> ›
+      <span class="text-ink-600">{article.contentType}</span>
+    </nav>
+
+    <header class="mt-6">
+      <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest">
+        {article.breaking && <span class="rounded-card bg-accent-600 px-1.5 py-0.5 text-paper">Breaking</span>}
+        <span class="text-accent-700">{category?.name}</span>
+        <span class="text-ink-300">/</span>
+        <span class="text-ink-400">{article.contentType}</span>
+      </div>
+      <h1 class="mt-3 font-display text-3xl font-bold leading-tight text-ink-950 md:text-4xl">{article.title}</h1>
+      <p class="mt-3 text-xl leading-relaxed text-ink-600">{article.subtitle}</p>
+
+      <div class="mt-6 flex flex-wrap items-center gap-2 border-y border-ink-200 py-3 text-sm text-ink-500">
+        {author && (
+          <a href={`/authors/${author.slug}`} class="font-medium text-ink-800 hover:underline dark:text-ink-200">
+            {author.name}
+          </a>
+        )}
+        <span>·</span>
+        <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
+        <span>·</span>
+        <span>{article.readingMinutes} min read</span>
+        {article.updatedAt && (
+          <span class="w-full text-xs text-ink-400 sm:w-auto">Updated {formatDate(article.updatedAt)}</span>
+        )}
+      </div>
+    </header>
+
+    {article.news && (
+      <div class="mt-6 rounded-card border border-ink-200 bg-ink-50 p-4 text-sm text-ink-600 dark:bg-ink-900">
+        <p class="font-semibold text-ink-800 dark:text-ink-200">Reporting details</p>
+        {article.news.eventDate && <p class="mt-1">Event date: {formatDate(article.news.eventDate)}</p>}
+        {article.news.location && <p>Location: {article.news.location}</p>}
+        {article.news.sources.length > 0 && (
+          <div class="mt-2">
+            <span class="font-semibold text-ink-800 dark:text-ink-200">Sources: </span>
+            {article.news.sources.map((source, index) => (
+              <span>{index > 0 && ', '}<a href={source.url} class="text-accent-700 underline">{source.name}</a></span>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+
+    <figure class="mt-8">
+      <div class="aspect-video overflow-hidden rounded-card">
+        <ImagePlaceholder article={article} />
+      </div>
+      <figcaption class="mt-2 text-center text-sm text-ink-400">
+        Featured image placeholder — real images arrive with the media library (Phase 8).
+      </figcaption>
+    </figure>
+
+    <div class="mt-10">
+      <ArticleBody blocks={article.body} />
+    </div>
+  </div>
+
+  {related.length > 0 && (
+    <section class="mx-auto max-w-6xl border-t border-ink-200 px-4 py-12">
+      <h2 class="font-display text-xl font-bold text-ink-950">Related reading</h2>
+      <div class="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {related.map((item) => <ArticleCard article={item} />)}
+      </div>
+    </section>
+  )}
+</PublicLayout>
