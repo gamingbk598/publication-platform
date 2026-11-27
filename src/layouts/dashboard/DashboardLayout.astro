@@ -13,6 +13,12 @@ interface Props {
 
 const { title } = Astro.props;
 const profile: StudioProfile | null = Astro.locals.profile ?? null;
+const currentPath = Astro.url.pathname;
+/** `navCls(href)` = exact match; `navCls(href, true)` = section prefix match. */
+const navCls = (href: string, section = false) =>
+  currentPath === href || (section && currentPath.startsWith(`${href}/`))
+    ? 'block rounded-card bg-ink-100 px-3 py-2 text-ink-900'
+    : 'block rounded-card px-3 py-2 text-ink-600 transition hover:bg-ink-50 hover:text-ink-900';
 
 const roleBadge =
   profile?.role === 'owner'
@@ -39,17 +45,15 @@ const roleBadge =
         </a>
         <p class="mt-0.5 text-xs uppercase tracking-wide text-ink-400">Studio</p>
         <nav class="mt-6 space-y-1 text-sm font-medium">
-          <a
-            href="/studio"
-            class="block rounded-card bg-ink-100 px-3 py-2 text-ink-900">Dashboard</a>
-          <span class="block cursor-default px-3 py-2 text-ink-300" title="Coming in Phase 4">
+          <a href="/studio" class={navCls('/studio')}>Dashboard</a>
+          <a href="/studio/articles" class={navCls('/studio/articles', true)}>
             Articles
-          </span>
-          <span class="block cursor-default px-3 py-2 text-ink-300" title="Coming in Phase 4">
+          </a>
+          <span class="block cursor-default px-3 py-2 text-ink-300" title="Coming in Phase 8 (R2 media)">
             Media
           </span>
           {profile?.role !== 'author' && (
-            <span class="block cursor-default px-3 py-2 text-ink-300" title="Coming in Phase 4">
+            <span class="block cursor-default px-3 py-2 text-ink-300" title="Team lives on the dashboard">
               Team
             </span>
           )}
