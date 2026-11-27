@@ -1,0 +1,165 @@
+---
+import DashboardLayout from '../../layouts/dashboard/DashboardLayout.astro';
+import type { ArticleStatus } from '../../types/article';
+
+/**
+ * /studio/articles — the article list.
+ *
+ * One query under the signed-in user's session; Row Level Security decides
+ * the scope: authors see only their own work, editors and the owner see the
+ * whole newsroom. Status filter via ?status=.
+ */
+
+const profile = Astro.locals.profile!;
+const sb = Astro.locals.supabase!;
+const filter = Astro.url.searchParams.get('status') ?? 'all';
+
+const STATUS_FILTERS: { key: string; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'draft', label: 'Drafts' },
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'in_review', label: 'In review' },
+  { key: 'changes_requested', label: 'Changes requested' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'scheduled', label: 'Scheduled' },
+  { key: 'published', label: 'Published' },
+  { key: 'rejected', label: 'Rejected' },
+];
+
+let query = sb
+  .from('articles')
+  .select(
+    `id, title, status, updated_at, published_at, content_type,
+     category:categories(name),
+     author:profiles(display_name),
+     article_tags(tags(name))`,
+  )
+  .order('updated_at', { ascending: false })
+  .limit(200);
+
+if (filter !== 'all') query = query.eq('status', filter);
+
+const { data: articles, error } = await query;
+
+const statusStyles: Record<string, string> = {
+  draft: 'bg-ink-100 text-ink-600',
+  submitted: 'bg-amber-50 text-amber-700',
+  in_review: 'bg-amber-50 text-amber-700',
+  changes_requested: 'bg-orange-50 text-orange-700',
+  approved: 'bg-green-50 text-green-700',
+  scheduled: 'bg-sky-50 text-sky-700',
+  published: 'bg-green-100 text-green-800',
+  rejected: 'bg-accent-50 text-accent-700',
+  archived: 'bg-ink-100 text-ink-400',
+};
+
+const formatDate = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+---
+
+<DashboardLayout title="Articles — Did You Hear? Studio">
+  <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-ink-950">Articles</h1>
+        <p class="mt-1 text-sm text-ink-500">
+          {profile.role === 'author'
+            ? 'Your drafts and submissions.'
+            : 'Everything in the newsroom — every status, every author.'}
+        </p>
+      </div>
+      <a
+        href="/studio/articles/new"
+        class="rounded-card bg-ink-950 px-4 py-2 text-sm font-semibold text-paper transition hover:bg-ink-800"
+      >
+        + New article
+      </a>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      {STATUS_FILTERS.map((f) => (
+        <a
+          href={`/studio/articles?status=${f.key}`}
+          class={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+            filter === f.key
+              ? 'border-ink-950 bg-ink-950 text-paper'
+              : 'border-ink-200 bg-white text-ink-600 hover:bg-ink-100'
+          }`}
+        >
+          {f.label}
+        </a>
+      ))}
+    </div>
+
+    {error && (
+      <p class="rounded-card border border-accent-200 bg-accent-50 px-3 py-2 text-sm text-accent-800">
+        Could not load articles: {error.message}
+      </p>
+    )}
+
+    {(!articles || articles.length === 0) && !error && (
+      <div class="rounded-card border border-dashed border-ink-200 bg-white px-6 py-12 text-center">
+        <p class="font-display text-lg font-bold text-ink-950">Nothing here yet</p>
+        <p class="mt-1 text-sm text-ink-500">
+          {filter === 'all'
+            ? 'Start your first story with the button above.'
+            : `No articles with status "${filter}".`}
+        </p>
+      </div>
+    )}
+
+    {articles && articles.length > 0 && (
+      <div class="overflow-x-auto rounded-card border border-ink-200 bg-white">
+        <table class="w-full min-w-[720px] text-left text-sm">
+          <thead>
+            <tr class="border-b border-ink-200 text-xs uppercase tracking-wide text-ink-400">
+              <th class="px-4 py-3 font-semibold">Title</th>
+              <th class="px-4 py-3 font-semibold">Status</th>
+              <th class="px-4 py-3 font-semibold">Category</th>
+              <th class="px-4 py-3 font-semibold">Author</th>
+              <th class="px-4 py-3 font-semibold">Updated</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-ink-100">
+            {articles.map((a) => (
+              <tr class="hover:bg-ink-50/60">
+                <td class="max-w-[340px] px-4 py-3">
+                  <p class="truncate font-medium text-ink-900">{a.title}</p>
+                  <p class="text-xs capitalize text-ink-400">
+                    {a.content_type.replace('_', ' ')}
+                    {a.article_tags?.length
+                      ? ` · ${a.article_tags.map((t) => t.tags?.name).filter(Boolean).join(', ')}`
+                      : ''}
+                  </p>
+                </td>
+                <td class="px-4 py-3">
+                  <span
+                    class={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                      statusStyles[a.status as ArticleStatus] ?? 'bg-ink-100 text-ink-600'
+                    }`}
+                  >
+                    {a.status.replace(/_/g, ' ')}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-ink-600">{a.category?.name ?? '—'}</td>
+                <td class="px-4 py-3 text-ink-600">{a.author?.display_name ?? '—'}</td>
+                <td class="px-4 py-3 text-ink-500">
+                  {formatDate(a.updated_at)}
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <a
+                    href={`/studio/articles/${a.id}`}
+                    class="rounded-card border border-ink-200 px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:bg-ink-100"
+                  >
+                    Open
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</DashboardLayout>
