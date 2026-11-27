@@ -1,0 +1,55 @@
+---
+import '../../styles/global.css';
+import LoginForm from '../../components/studio/LoginForm';
+
+/**
+ * /studio/login — the only sign-in entrance to the studio.
+ * Standalone layout (no dashboard chrome): unauthenticated visitors see just
+ * this screen and nothing else of the CMS.
+ */
+
+const errorParam = Astro.url.searchParams.get('error');
+const notice =
+  errorParam === 'not_configured'
+    ? 'Supabase is not configured yet. Add PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY to .env, then restart the dev server.'
+    : errorParam === 'inactive'
+      ? 'This account is not active. Contact the site owner.'
+      : null;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="robots" content="noindex" />
+    <title>Sign in — Did You Hear? Studio</title>
+  </head>
+  <body class="min-h-dvh bg-ink-50 font-sans text-ink-900">
+    <main class="flex min-h-dvh items-center justify-center px-4 py-12">
+      <div class="w-full max-w-sm">
+        <div class="mb-8 text-center">
+          <p class="font-display text-2xl font-bold text-ink-950">Did You Hear?</p>
+          <p class="mt-1 text-sm text-ink-500">Editorial Studio — sign in to continue</p>
+        </div>
+
+        {
+          notice && (
+            <div class="mb-6 rounded-card border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-800">
+              {notice}
+            </div>
+          )
+        }
+
+        <div class="rounded-card border border-ink-200 bg-white p-8 shadow-card">
+          <LoginForm />\n        </div>
+
+        <p class="mt-6 text-center text-xs text-ink-400">
+          The studio is invite-only. Accounts are created through invitations
+          from the editorial team.
+        </p>
+      </div>
+    </main>
+  </body>
+</html>

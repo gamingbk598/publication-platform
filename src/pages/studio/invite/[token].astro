@@ -1,0 +1,141 @@
+---
+import '../../../styles/global.css';
+import AcceptInviteForm from '../../../components/studio/AcceptInviteForm';
+import { sha256Hex } from '../../../lib/crypto';
+import { getSupabaseAdminClient } from '../../../lib/supabase/server';
+import { createSupabaseSsrClient, isSupabaseConfigured } from '../../../lib/supabase/ssr';
+
+/**
+ * /studio/invite/[token] — public invitation acceptance page.
+ *
+ * The token is verified server-side against the stored SHA-256 hash with the
+ * admin client (token hashes are invisible to anon users through RLS). The
+ * page renders three states:
+ *   1. invalid/expired/revoked  → explanation, no form
+ *   2. signed in as invited email → single "Accept" button (links account)
+ *   3. no session → set-password form (account is created on accept)
+ */
+
+const { token } = Astro.params;
+
+let state: 'not_configured' | 'invalid' | 'signed_in_other' | 'accept' | 'set_password' =
+  'invalid';
+let email: string | null = null;
+let invitedRole: 'author' | 'editor' = 'author';
+let signedInEmail: string | null = null;
+
+if (!isSupabaseConfigured()) {
+  state = 'not_configured';
+} else if (token) {
+  try {
+    const admin = getSupabaseAdminClient();
+    const tokenHash = await sha256Hex(token);
+    const { data: invitation } = await admin
+      .from('invitations')
+      .select('email, role, status, expires_at')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+
+    if (
+      invitation &&
+      invitation.status === 'pending' &&
+      new Date(invitation.expires_at) > new Date()
+    ) {
+      email = invitation.email;
+      invitedRole = invitation.role;
+
+      const supabase = createSupabaseSsrClient(Astro.request, Astro.cookies);
+      const {
+        data: { user },
+      } = (await supabase?.auth.getUser()) ?? { data: { user: null } };
+
+      if (user) {
+        if (user.email?.toLowerCase() === email.toLowerCase()) {
+          state = 'accept';
+        } else {
+          state = 'signed_in_other';
+          signedInEmail = user.email;
+        }
+      } else {
+        state = 'set_password';
+      }
+    }
+  } catch {
+    // Admin key missing or DB unreachable — fall through to invalid.
+  }
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="robots" content="noindex" />
+    <title>Invitation — Did You Hear? Studio</title>
+  </head>
+  <body class="min-h-dvh bg-ink-50 font-sans text-ink-900">
+    <main class="flex min-h-dvh items-center justify-center px-4 py-12">
+      <div class="w-full max-w-sm">
+        <div class="mb-8 text-center">
+          <p class="font-display text-2xl font-bold text-ink-950">Did You Hear?</p>
+          <p class="mt-1 text-sm text-ink-500">Editorial Studio</p>
+        </div>
+
+        <div class="rounded-card border border-ink-200 bg-white p-8 shadow-card">
+          {state === 'not_configured' && (
+            <div class="text-sm text-ink-600">
+              <p class="font-semibold text-ink-900">Almost there</p>
+              <p class="mt-2">
+                The server is missing its Supabase configuration, so invitations cannot be
+                accepted yet. Add the environment values and try this link again.
+              </p>
+            </div>
+          )}
+
+          {state === 'invalid' && (
+            <div class="text-sm text-ink-600">
+              <p class="font-semibold text-ink-900">This invitation isn't available</p>
+              <p class="mt-2">
+                The link is invalid, expired, revoked, or already used. Ask the site owner
+                to send you a fresh invitation.
+              </p>
+            </div>
+          )}
+
+          {state === 'signed_in_other' && (
+            <div class="text-sm text-ink-600">
+              <p class="font-semibold text-ink-900">Signed in as the wrong account</p>
+              <p class="mt-2">
+                You are signed in as <strong>{signedInEmail}</strong>, but this invitation
+                is for <strong>{email}</strong>. Sign out first, then open this link again.
+              </p>
+              <form method="post" action="/api/studio/auth/signout" class="mt-4">
+                <button
+                  type="submit"
+                  class="w-full rounded-card bg-ink-950 px-4 py-2.5 text-sm font-semibold text-paper transition hover:bg-ink-800"
+                >
+                  Sign out
+                </button>
+              </form>
+            </div>
+          )}
+
+          {state === 'accept' && (
+            <AcceptInviteForm token={token} mode="accept" email={email} role={invitedRole} />
+          )}
+
+          {state === 'set_password' && (
+            <AcceptInviteForm
+              token={token}
+              mode="set_password"
+              email={email}
+              role={invitedRole}
+            />
+          )}
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

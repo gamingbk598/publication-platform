@@ -1,14 +1,76 @@
 ---
 import DashboardLayout from '../../layouts/dashboard/DashboardLayout.astro';
+import InvitationManager from '../../components/studio/InvitationManager';
+
+/**
+ * /studio — the dashboard home. The middleware guarantees a signed-in,
+ * active member here (locals.profile). This screen is the Phase 3 deliverable:
+ * session, role display, and the invitation system. Content management
+ * screens arrive in Phase 4/5.
+ */
+
+const profile = Astro.locals.profile!;
+const user = Astro.locals.user!;
+const isEditorOrAbove = profile.role === 'owner' || profile.role === 'editor';
 ---
 
-<DashboardLayout title="Studio — Dashboard">
-  <div class="rounded-card border border-ink-200 bg-white p-8">
-    <h1 class="font-display text-2xl font-bold text-ink-950">Editorial Studio</h1>
-    <p class="mt-2 max-w-xl text-ink-600">
-      The CMS dashboard will be built in Phase 4 (management screens) and Phase 5 (the full
-      editorial workflow). Authentication and route protection arrive in Phase 3. This page
-      exists so the dashboard layout and design system can be verified early.
-    </p>
+<DashboardLayout title="Dashboard — Did You Hear? Studio">
+  <div class="space-y-6">
+    <div class="rounded-card border border-ink-200 bg-white p-8">
+      <h1 class="font-display text-2xl font-bold text-ink-950">
+        Welcome back, {profile.display_name}
+      </h1>
+      <p class="mt-2 text-sm text-ink-600">
+        Signed in as <strong>{user.email}</strong>
+        {profile.role === 'owner' && (
+          <>
+            {' '}— you are the <strong>owner</strong> of this publication. You manage the
+            team, settings, and can do everything editors and authors do.
+          </>
+        )}
+        {profile.role === 'editor' && (
+          <>
+            {' '}— as an <strong>editor</strong> you review, edit, and publish articles, and
+            can invite new authors.
+          </>
+        )}
+        {profile.role === 'author' && (
+          <>
+            {' '}— as an <strong>author</strong> you write and submit articles for review.
+            Publishing is done by editors.
+          </>
+        )}
+      </p>
+    </div>
+
+    {
+      isEditorOrAbove ? (
+        <div class="rounded-card border border-ink-200 bg-white p-8">
+          <h2 class="font-display text-lg font-bold text-ink-950">Team invitations</h2>
+          <p class="mt-1 mb-6 text-sm text-ink-500">
+            Invite-only membership: create an invitation, copy the one-time link, and send
+            it to the person yourself. Links expire after 7 days.
+          </p>
+          <InvitationManager canInviteEditors={profile.role === 'owner'} />
+        </div>
+      ) : (
+        <div class="rounded-card border border-ink-200 bg-white p-8">
+          <h2 class="font-display text-lg font-bold text-ink-950">Your workspace</h2>
+          <p class="mt-2 max-w-xl text-sm text-ink-600">
+            The writing and submission tools are being built (Phase 4–5). Until then your
+            account is ready and connected — nothing else to set up.
+          </p>
+        </div>
+      )
+    }
+
+    <div class="rounded-card border border-ink-200 bg-white p-8">
+      <h2 class="font-display text-lg font-bold text-ink-950">What's next</h2>
+      <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-600">
+        <li>Phase 4 — article management screens (drafts, submissions, media).</li>
+        <li>Phase 5 — the full editorial workflow with the rich text editor.</li>
+        <li>Phase 6 — SEO, sitemap, RSS, and social previews.</li>
+      </ul>
+    </div>
   </div>
 </DashboardLayout>
