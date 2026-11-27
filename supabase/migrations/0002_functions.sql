@@ -101,9 +101,13 @@ begin
   insert into public.profiles (id, username, display_name, role)
   values (
     new.id,
-    lower(regexp_replace(split_part(new.email, '@', 1), '[^a-zA-Z0-9-]', '-', 'g')) || '-' || substr(new.id::text, 1, 4),
+    left(lower(regexp_replace(split_part(new.email, '@', 1), '[^a-zA-Z0-9-]', '-', 'g')), 35) || '-' || substr(new.id::text, 1, 4),
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
-    case when (select count(*) from public.profiles) = 0 then 'owner' else 'author' end
+    case
+      when (select count(*) from public.profiles) = 0
+        then 'owner'::public.user_role
+      else 'author'::public.user_role
+    end
   );
   return new;
 end;
@@ -122,10 +126,15 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.role is distinct from old.role and not public.is_owner() then
+  -- session_user cannot be spoofed and is never 'postgres'/'service_role'
+  -- for client API traffic; those roles are the owner's server-side escape
+  -- hatch (SQL Editor / service key) for emergencies.
+  if new.role is distinct from old.role
+     and not (public.is_owner() or session_user in ('postgres', 'service_role')) then
     raise exception 'Only the owner can change user roles';
   end if;
-  if new.status is distinct from old.status and not public.is_owner() then
+  if new.status is distinct from old.status
+     and not (public.is_owner() or session_user in ('postgres', 'service_role')) then
     raise exception 'Only the owner can change user status';
   end if;
   return new;
