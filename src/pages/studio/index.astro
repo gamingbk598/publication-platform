@@ -4,8 +4,9 @@ import InvitationManager from '../../components/studio/InvitationManager';
 
 /**
  * /studio — the dashboard home. The middleware guarantees a signed-in,
- * active member here (locals.profile). Sessions, roles, the invitation
- * system, and the Phase 4 article tools all live behind this screen.
+ * active member here (locals.profile). This screen is the Phase 3 deliverable:
+ * session, role display, and the invitation system. Content management
+ * screens arrive in Phase 4/5.
  */
 
 const profile = Astro.locals.profile!;
@@ -50,7 +51,7 @@ const isEditorOrAbove = profile.role === 'owner' || profile.role === 'editor';
             Invite-only membership: create an invitation, copy the one-time link, and send
             it to the person yourself. Links expire after 7 days.
           </p>
-          <InvitationManager canInviteEditors={profile.role === 'owner'} />
+          <InvitationManager client:load canInviteEditors={profile.role === 'owner'} />
         </div>
       ) : null
     }

@@ -25,6 +25,7 @@ const [{ data: categories }, { data: tags }] = await Promise.all([
     <h1 class="mt-1 font-display text-2xl font-bold text-ink-950">New article</h1>
   </div>
   <ArticleEditor
+    client:load
     mode="create"
     categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
     existingTags={(tags ?? []).map((t) => t.name)}

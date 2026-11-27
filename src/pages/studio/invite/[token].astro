@@ -123,11 +123,12 @@ if (!isSupabaseConfigured()) {
           )}
 
           {state === 'accept' && (
-            <AcceptInviteForm token={token} mode="accept" email={email} role={invitedRole} />
+            <AcceptInviteForm client:load token={token} mode="accept" email={email} role={invitedRole} />
           )}
 
           {state === 'set_password' && (
             <AcceptInviteForm
+              client:load
               token={token}
               mode="set_password"
               email={email}

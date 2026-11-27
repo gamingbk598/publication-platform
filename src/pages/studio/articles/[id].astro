@@ -69,6 +69,7 @@ const editorArticle: EditorArticle = {
     <p class="mt-1 text-xs text-ink-400">/article/{article.slug}</p>
   </div>
   <ArticleEditor
+    client:load
     mode="edit"
     article={editorArticle}
     categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
