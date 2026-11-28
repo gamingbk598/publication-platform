@@ -1,16 +1,16 @@
 ---
 import PublicLayout from '../../layouts/public/PublicLayout.astro';
 import ArticleCard from '../../components/cards/ArticleCard.astro';
-import { getAuthorBySlug, getByAuthor, formatDate } from '../../lib/sample-data';
+import { getAuthorBySlug, getByAuthor, formatDate } from '../../lib/data';
 
 const { slug } = Astro.params;
-const author = slug ? getAuthorBySlug(slug) : undefined;
+const author = slug ? await getAuthorBySlug(slug) : undefined;
 
 if (!author) {
   return Astro.rewrite('/404');
 }
 
-const articles = getByAuthor(author.id);
+const articles = await getByAuthor(author.id);
 ---
 
 <PublicLayout title={`${author.name} — Did You Hear?`} description={author.bio}>

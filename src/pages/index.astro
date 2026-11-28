@@ -7,16 +7,26 @@ import {
   getLatest,
   getEditorsPicks,
   getByCategory,
-  getCategory,
-  getAuthorById,
+  getCategories,
+  getPublishedCountsByCategory,
   formatDate,
-  categories,
-} from '../lib/sample-data';
+} from '../lib/data';
 
-const featured = getFeatured();
-const latest = getLatest(6);
-const picks = getEditorsPicks(3);
-const sectionCategories = categories.filter((c) => getByCategory(c.slug, 1).length > 0);
+const [featured, latest, picks, allCategories, counts] = await Promise.all([
+  getFeatured(),
+  getLatest(6),
+  getEditorsPicks(3),
+  getCategories(),
+  getPublishedCountsByCategory(),
+]);
+const sectionCategories = allCategories.filter((c) => (counts[c.slug] ?? 0) > 0);
+// Resolve each section's articles up front so the template stays synchronous.
+const sections = await Promise.all(
+  sectionCategories.map(async (category) => ({
+    category,
+    items: await getByCategory(category.slug, 3),
+  })),
+);
 ---
 
 <PublicLayout title="Did You Hear? — Blogging and news" description="A blogging and news channel: reporting, explainers, guides, and takes worth sharing.">
@@ -31,7 +41,7 @@ const sectionCategories = categories.filter((c) => getByCategory(c.slug, 1).leng
         <div>
           <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest">
             {featured.breaking && <span class="rounded-card bg-accent-600 px-1.5 py-0.5 text-paper">Breaking</span>}
-            <span class="text-accent-700">{getCategory(featured.categorySlug)?.name}</span>
+            <span class="text-accent-700">{featured.category?.name}</span>
             <span class="text-ink-300">/</span>
             <span class="text-ink-400">{featured.contentType}</span>
           </div>
@@ -40,7 +50,7 @@ const sectionCategories = categories.filter((c) => getByCategory(c.slug, 1).leng
           </h1>
           <p class="mt-3 text-lg leading-relaxed text-ink-600">{featured.subtitle}</p>
           <p class="mt-4 text-sm text-ink-400">
-            {getAuthorById(featured.authorId)?.name} · {formatDate(featured.publishedAt)} · {featured.readingMinutes} min read
+            {featured.author?.name} · {formatDate(featured.publishedAt)} · {featured.readingMinutes} min read
           </p>
         </div>
       </a>
@@ -72,8 +82,7 @@ const sectionCategories = categories.filter((c) => getByCategory(c.slug, 1).leng
     </aside>
   </section>
 
-  {sectionCategories.map((category) => {
-    const items = getByCategory(category.slug, 3);
+  {sections.map(({ category, items }) => {
     return (
       <section class="mx-auto max-w-6xl border-t border-ink-200 px-4 py-10">
         <div class="flex items-baseline justify-between">

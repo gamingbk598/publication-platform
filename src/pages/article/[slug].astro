@@ -5,22 +5,64 @@ import ArticleCard from '../../components/cards/ArticleCard.astro';
 import ImagePlaceholder from '../../components/common/ImagePlaceholder.astro';
 import {
   getArticleBySlug,
-  getCategory,
-  getAuthorById,
   getRelated,
   formatDate,
-} from '../../lib/sample-data';
+} from '../../lib/data';
+import { isSupabaseConfigured } from '../../lib/supabase/ssr';
+import { getSupabaseServerClient } from '../../lib/supabase/server';
+import * as sample from '../../lib/sample-data';
 
 const { slug } = Astro.params;
-const article = slug ? getArticleBySlug(slug) : undefined;
+const article = slug ? await getArticleBySlug(slug) : undefined;
 
 if (!article) {
-  return Astro.rewrite('/404');
+  // ── TEMP DEBUG BLOCK ────────────────────────────────────────────────────
+  // Renders page-context diagnostics instead of the 404 page so we can see
+  // exactly why the public page loses the article. Remove once fixed.
+  const diag: Record<string, unknown> = {
+    debug: 'article page not-found diagnostics',
+    slug,
+    time_utc: new Date().toISOString(),
+    page_import_meta_env: {
+      has_url: Boolean(import.meta.env.PUBLIC_SUPABASE_URL),
+      has_key: Boolean(import.meta.env.PUBLIC_SUPABASE_ANON_KEY),
+      url_length: (import.meta.env.PUBLIC_SUPABASE_URL as string | undefined)?.length ?? 0,
+      url_starts_https: String(import.meta.env.PUBLIC_SUPABASE_URL ?? '').startsWith('https://'),
+    },
+    process_env_fallback: {
+      has_url: Boolean(process.env?.PUBLIC_SUPABASE_URL),
+    },
+    helper_is_configured: isSupabaseConfigured(),
+    sample_data_has_slug: slug ? Boolean(sample.getArticleBySlug(slug)) : false,
+  };
+  try {
+    const sb = getSupabaseServerClient();
+    const r = await sb
+      .from('articles')
+      .select('id, slug, status, published_at')
+      .eq('slug', slug ?? '')
+      .maybeSingle();
+    diag.direct_query_from_page = {
+      found: Boolean(r.data),
+      error: r.error ? `${r.error.message} (code ${r.error.code})` : null,
+      row: r.data ?? null,
+    };
+  } catch (e) {
+    diag.direct_query_from_page = {
+      threw: e instanceof Error ? e.message : String(e),
+    };
+  }
+  console.error('[article-404-debug] ' + JSON.stringify(diag));
+  return new Response(JSON.stringify(diag, null, 2), {
+    headers: { 'content-type': 'application/json' },
+  });
+  // ── END TEMP DEBUG BLOCK ────────────────────────────────────────────────
 }
 
-const category = getCategory(article.categorySlug);
-const author = getAuthorById(article.authorId);
-const related = getRelated(article, 3);
+// Relations are resolved by the data layer.
+const category = article.category ?? null;
+const author = article.author ?? null;
+const related = await getRelated(article, 3);
 ---
 
 <PublicLayout title={`${article.title} — Did You Hear?`} description={article.excerpt}>
