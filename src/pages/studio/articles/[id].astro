@@ -34,7 +34,7 @@ const [{ data: categories }, { data: tags }, { data: reviews }] = await Promise.
   sb.from('tags').select('name').order('name').limit(100),
   sb
     .from('editorial_reviews')
-    .select('id, decision, comment, is_author_response, created_at, reviewer:profiles(display_name)')
+    .select('id, decision, comment, is_author_response, created_at, reviewer:profiles!reviewer_id(display_name)')
     .eq('article_id', id)
     .order('created_at', { ascending: true })
     .limit(100),

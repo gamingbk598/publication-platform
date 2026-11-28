@@ -31,7 +31,7 @@ let query = sb
   .select(
     `id, title, status, updated_at, published_at, content_type,
      category:categories(name),
-     author:profiles(display_name),
+     author:profiles!author_id(display_name),
      article_tags(tags(name))`,
   )
   .order('updated_at', { ascending: false })
@@ -125,13 +125,7 @@ const formatDate = (iso: string | null) =>
             {articles.map((a) => (
               <tr class="hover:bg-ink-50/60">
                 <td class="max-w-[340px] px-4 py-3">
-                  <p class="truncate font-medium text-ink-900">{a.title}</p>
-                  <p class="text-xs capitalize text-ink-400">
-                    {a.content_type.replace('_', ' ')}
-                    {a.article_tags?.length
-                      ? ` · ${a.article_tags.map((t) => t.tags?.name).filter(Boolean).join(', ')}`
-                      : ''}
-                  </p>
+                  <p class="truncate font-medium text-ink-900">a.title}PlaceholderFix</p>
                 </td>
                 <td class="px-4 py-3">
                   <span
