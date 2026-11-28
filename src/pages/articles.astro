@@ -1,13 +1,15 @@
 ---
 import PublicLayout from '../layouts/public/PublicLayout.astro';
 import ListingPage from '../components/articles/ListingPage.astro';
-import { getLatest } from '../lib/sample-data';
+import { getLatest } from '../lib/data';
+
+const articles = await getLatest(50);
 ---
 
 <PublicLayout title="Articles — Did You Hear?" description="All published articles, newest first.">
   <ListingPage
     title="Articles"
     description="Everything we have published, newest first — reporting, explainers, analysis, and more."
-    articles={getLatest(50)}
+    articles={articles}
   />
 </PublicLayout>

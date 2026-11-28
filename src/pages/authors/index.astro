@@ -1,6 +1,8 @@
 ---
 import PublicLayout from '../../layouts/public/PublicLayout.astro';
-import { authors } from '../../lib/sample-data';
+import { getAuthors } from '../../lib/data';
+
+const authors = await getAuthors();
 ---
 
 <PublicLayout title="Authors — Did You Hear?" description="The people behind the channel.">

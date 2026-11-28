@@ -1,16 +1,16 @@
 ---
 import PublicLayout from '../../layouts/public/PublicLayout.astro';
 import ListingPage from '../../components/articles/ListingPage.astro';
-import { getCategory, getByCategory } from '../../lib/sample-data';
+import { getCategory, getByCategory } from '../../lib/data';
 
 const { slug } = Astro.params;
-const category = slug ? getCategory(slug) : undefined;
+const category = slug ? await getCategory(slug) : undefined;
 
 if (!category) {
   return Astro.rewrite('/404');
 }
 
-const articles = getByCategory(category.slug, 50);
+const articles = await getByCategory(category.slug, 50);
 ---
 
 <PublicLayout title={`${category.name} — Did You Hear?`} description={category.description}>

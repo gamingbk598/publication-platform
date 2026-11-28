@@ -1,9 +1,11 @@
 ---
 import PublicLayout from '../layouts/public/PublicLayout.astro';
 import ListingPage from '../components/articles/ListingPage.astro';
-import { getByType } from '../lib/sample-data';
+import { getByType } from '../lib/data';
+
+const articles = await getByType('blog');
 ---
 
 <PublicLayout title="Blogs — Did You Hear?">
-  <ListingPage title="Blogs" description="Personal essays and notes from our writers." articles={getByType('blog')} />
+  <ListingPage title="Blogs" description="Personal essays and notes from our writers." articles={articles} />
 </PublicLayout>

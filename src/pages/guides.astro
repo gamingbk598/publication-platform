@@ -1,13 +1,15 @@
 ---
 import PublicLayout from '../layouts/public/PublicLayout.astro';
 import ListingPage from '../components/articles/ListingPage.astro';
-import { getByType } from '../lib/sample-data';
+import { getByType } from '../lib/data';
+
+const articles = await getByType('guide');
 ---
 
 <PublicLayout title="Guides — Did You Hear?">
   <ListingPage
     title="Guides"
     description="Practical, step-by-step guides you can act on."
-    articles={getByType('guide')}
+    articles={articles}
   />
 </PublicLayout>

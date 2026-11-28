@@ -1,6 +1,9 @@
 ---
 import PublicLayout from '../../layouts/public/PublicLayout.astro';
-import { categories, getByCategory } from '../../lib/sample-data';
+import { getCategories, getPublishedCountsByCategory } from '../../lib/data';
+
+const categories = await getCategories();
+const counts = await getPublishedCountsByCategory();
 ---
 
 <PublicLayout title="Topics — Did You Hear?" description="Browse all coverage by topic.">
@@ -11,7 +14,7 @@ import { categories, getByCategory } from '../../lib/sample-data';
     </header>
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {categories.map((category) => {
-        const count = getByCategory(category.slug, 100).length;
+        const count = counts[category.slug] ?? 0;
         return (
           <a
             href={`/topics/${category.slug}`}

@@ -1,10 +1,10 @@
 ---
 import PublicLayout from '../layouts/public/PublicLayout.astro';
 import ArticleCard from '../components/cards/ArticleCard.astro';
-import { searchArticles } from '../lib/sample-data';
+import { searchArticles } from '../lib/data';
 
 const q = typeof Astro.url.searchParams.get('q') === 'string' ? Astro.url.searchParams.get('q') ?? '' : '';
-const results = q ? searchArticles(q) : [];
+const results = q ? await searchArticles(q) : [];
 ---
 
 <PublicLayout title={q ? `Search: ${q} — Did You Hear?` : 'Search — Did You Hear?'}>
