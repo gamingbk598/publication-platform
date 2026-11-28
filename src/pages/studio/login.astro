@@ -12,9 +12,11 @@ const errorParam = Astro.url.searchParams.get('error');
 const notice =
   errorParam === 'not_configured'
     ? 'Supabase is not configured yet. Add PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY to .env, then restart the dev server.'
-    : errorParam === 'inactive'
-      ? 'This account is not active. Contact the site owner.'
-      : null;
+    : errorParam === 'no_profile'
+      ? 'Signed in, but this account has no profile row visible to the app. This usually means the profiles table blocks reads via Row Level Security — check the dev server terminal for the exact reason.'
+      : errorParam === 'inactive'
+        ? 'This account is not active. Contact the site owner.'
+        : null;
 ---
 
 <!doctype html>

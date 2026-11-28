@@ -88,14 +88,30 @@ export const onRequest: MiddlewareResponseHandler = async (context, next) => {
     return redirect('/studio/login');
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id, username, display_name, title, avatar_url, role, status')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  // No profile or deactivated account: kill the session and bounce to login.
-  if (!profile || profile.status !== 'active') {
+  // Distinguish the two failure modes — the login page and the terminal log
+  // both say which one happened, so a broken setup is debuggable in one look.
+  if (!profile) {
+    console.warn(
+      `[studio] profile lookup returned no row for user ${user.id}` +
+        (profileError ? ` — database said: ${profileError.message} (code ${profileError.code})` : ' — no error, row truly absent or hidden by RLS'),
+    );
+    await supabase.auth.signOut();
+    if (isStudioApi) {
+      return new Response(JSON.stringify({ error: 'No profile for this account' }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    return redirect('/studio/login?error=no_profile');
+  }
+
+  if (profile.status !== 'active') {
     await supabase.auth.signOut();
     if (isStudioApi) {
       return new Response(JSON.stringify({ error: 'Account is not active' }), {
