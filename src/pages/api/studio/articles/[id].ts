@@ -6,7 +6,7 @@ import {
   sanitizeBlocks,
   slugify,
   uniqueSlug,
-} from '../../../../../lib/studio-articles';
+} from '../../../../lib/studio-articles';
 
 /**
  * GET   /api/studio/articles/[id] — fetch one article with its tags and
