@@ -610,7 +610,7 @@ export default function ArticleEditor({
           <h2 className="font-display text-lg font-bold text-ink-950">Workflow</h2>
 
           <div className="flex flex-wrap gap-2">
-            {!isEditor && editable && status !== 'submitted' && (
+            {['draft', 'changes_requested', 'rejected'].includes(status) && (
               <button
                 type="button"
                 onClick={() => transition('submit')}
@@ -618,16 +618,6 @@ export default function ArticleEditor({
                 className={btnPrimary}
               >
                 {busy === 'submit' ? 'Submitting…' : 'Submit for review'}
-              </button>
-            )}
-            {!isEditor && status === 'rejected' && (
-              <button
-                type="button"
-                onClick={() => transition('submit')}
-                disabled={busy !== null}
-                className={btnPrimary}
-              >
-                Resubmit
               </button>
             )}
             {isEditor && status === 'submitted' && (
